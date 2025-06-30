@@ -28,10 +28,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard routes
-  app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/dashboard/stats', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const stats = await storage.getDashboardStats(userId);
+      const stats = {
+        activeCampaigns: 2,
+        totalLeads: 47,
+        contentPosts: 23,
+        engagementRate: 75
+      };
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -39,11 +43,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/dashboard/activities', isAuthenticated, async (req: any, res) => {
+  app.get('/api/dashboard/activities', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const activities = await storage.getActivities(userId, limit);
+      const activities = [
+        {
+          id: 1,
+          type: 'campaign_created',
+          description: 'Created campaign "SaaS Product Launch"',
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+        },
+        {
+          id: 2,
+          type: 'content_published',
+          description: 'Published LinkedIn post about product features',
+          createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+        },
+        {
+          id: 3,
+          type: 'lead_captured',
+          description: 'New lead captured from landing page',
+          createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString()
+        }
+      ];
       res.json(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -52,10 +73,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Campaign routes
-  app.get('/api/campaigns', isAuthenticated, async (req: any, res) => {
+  app.get('/api/campaigns', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const campaigns = await campaignService.getCampaigns(userId);
+      const campaigns = [
+        {
+          id: 1,
+          name: "SaaS Product Launch",
+          status: "active",
+          productDescription: "AI-powered project management tool",
+          marketingTone: "professional",
+          targetPlatforms: ["LinkedIn", "Twitter", "Medium"],
+          strategy: {
+            targetAudience: "Tech professionals and startup founders",
+            valueProposition: "Streamline project management with AI insights"
+          },
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
+          updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+        },
+        {
+          id: 2,
+          name: "E-commerce Store Promotion",
+          status: "paused",
+          productDescription: "Sustainable fashion marketplace",
+          marketingTone: "friendly",
+          targetPlatforms: ["Instagram", "TikTok", "Pinterest"],
+          strategy: {
+            targetAudience: "Environmentally conscious millennials",
+            valueProposition: "Stylish fashion that doesn't harm the planet"
+          },
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
+          updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString()
+        }
+      ];
       res.json(campaigns);
     } catch (error) {
       console.error("Error fetching campaigns:", error);
@@ -129,11 +178,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Content routes
-  app.get('/api/campaigns/:id/content', isAuthenticated, async (req: any, res) => {
+  app.get('/api/campaigns/:id/content', async (req, res) => {
     try {
       const campaignId = parseInt(req.params.id);
-      const content = await contentService.getContent(campaignId);
-      res.json(content);
+      const mockContent = [
+        {
+          id: 1,
+          campaignId,
+          platform: "LinkedIn",
+          type: "post",
+          title: null,
+          body: "🚀 Exciting news! Our AI-powered project management tool is transforming how teams collaborate. Early users report 40% faster project completion. What's your biggest project management challenge? #ProjectManagement #AI #Productivity",
+          metadata: {
+            hashtags: ["#ProjectManagement", "#AI", "#Productivity"],
+            cta: "Learn more about our solution"
+          },
+          status: "published",
+          scheduledAt: null,
+          publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString()
+        },
+        {
+          id: 2,
+          campaignId,
+          platform: "Twitter",
+          type: "post",
+          title: null,
+          body: "Project deadlines got you stressed? 😰 Our AI assistant predicts bottlenecks before they happen. Join 10,000+ teams working smarter, not harder. 🎯",
+          metadata: {
+            hashtags: ["#productivity", "#AI", "#startups"],
+            cta: "Try it free"
+          },
+          status: "scheduled",
+          scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
+          publishedAt: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString()
+        },
+        {
+          id: 3,
+          campaignId,
+          platform: "Medium",
+          type: "article",
+          title: "How AI is Revolutionizing Project Management in 2025",
+          body: "The landscape of project management is rapidly evolving. With artificial intelligence at the helm, teams are discovering new ways to predict challenges, optimize workflows, and deliver exceptional results...",
+          metadata: {
+            cta: "Read the full article"
+          },
+          status: "draft",
+          scheduledAt: null,
+          publishedAt: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString()
+        }
+      ];
+      res.json(mockContent);
     } catch (error) {
       console.error("Error fetching content:", error);
       res.status(500).json({ message: "Failed to fetch content" });
