@@ -363,6 +363,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Engine monitoring routes (mock for now)
+  app.get('/api/campaigns/:id/engine-status', async (req, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      
+      // Mock autonomous engine status
+      const mockStatus = {
+        campaignId,
+        phase: 'continuous',
+        lastMutation: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+        performanceDataCount: 15,
+        learningBankSize: 3,
+        isActive: true,
+        nextScheduledAction: new Date(Date.now() + 1000 * 60 * 30).toISOString(),
+        currentMetrics: {
+          totalViews: 2847,
+          totalClicks: 156,
+          totalConversions: 12,
+          engagementRate: 0.055,
+          bestPerformingPlatform: 'LinkedIn'
+        }
+      };
+      
+      res.json(mockStatus);
+    } catch (error) {
+      console.error("Error fetching engine status:", error);
+      res.status(500).json({ message: "Failed to fetch engine status" });
+    }
+  });
+
+  app.post('/api/campaigns/:id/engine-stop', async (req, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      // Mock emergency stop
+      console.log(`Mock emergency stop for campaign ${campaignId}: ${reason}`);
+      
+      res.json({ 
+        message: 'Engine stopped successfully',
+        campaignId,
+        stoppedAt: new Date().toISOString(),
+        reason: reason || 'Manual stop'
+      });
+    } catch (error) {
+      console.error("Error stopping engine:", error);
+      res.status(500).json({ message: "Failed to stop engine" });
+    }
+  });
+
+  app.get('/api/engine/overview', async (req, res) => {
+    try {
+      // Mock overview of all autonomous campaigns
+      const mockOverview = [
+        {
+          campaignId: 1,
+          name: "AI Project Manager Pro",
+          phase: 'continuous',
+          lastMutation: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+          performanceDataCount: 15,
+          learningBankSize: 3,
+          status: 'active',
+          platforms: ['LinkedIn', 'Twitter', 'Medium'],
+          dailyMetrics: {
+            views: 1250,
+            clicks: 85,
+            conversions: 7
+          }
+        },
+        {
+          campaignId: 2,
+          name: "Smart Fitness Tracker",
+          phase: 'feedback',
+          lastMutation: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+          performanceDataCount: 8,
+          learningBankSize: 1,
+          status: 'active',
+          platforms: ['Instagram', 'TikTok', 'Pinterest'],
+          dailyMetrics: {
+            views: 3420,
+            clicks: 198,
+            conversions: 15
+          }
+        }
+      ];
+      
+      res.json(mockOverview);
+    } catch (error) {
+      console.error("Error fetching engine overview:", error);
+      res.status(500).json({ message: "Failed to fetch engine overview" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

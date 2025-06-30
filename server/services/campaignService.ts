@@ -1,6 +1,7 @@
 import { storage } from "../storage";
 import { openAIService } from "./openai";
 import { contentService } from "./contentService";
+import { autonomousEngine } from "./autonomousEngine";
 import type { InsertCampaign, Campaign, InsertActivity } from "@shared/schema";
 
 export class CampaignService {
@@ -31,8 +32,18 @@ export class CampaignService {
         },
       });
 
-      // Generate initial content
-      await this.generateInitialContent(campaign, strategy);
+      // Initialize autonomous engine for this campaign
+      try {
+        await autonomousEngine.initializeCampaign(
+          campaign.id, 
+          campaign.productDescription, 
+          userId
+        );
+      } catch (error) {
+        console.error('Failed to initialize autonomous engine:', error);
+        // Generate initial content manually if autonomous engine fails
+        await this.generateInitialContent(campaign, strategy);
+      }
 
       return campaign;
     } catch (error) {
