@@ -21,7 +21,7 @@ import {
   type InsertLandingPage,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -110,25 +110,42 @@ export class DatabaseStorage implements IStorage {
   async createCampaign(campaign: InsertCampaign & { userId: string }): Promise<Campaign> {
     const [newCampaign] = await db
       .insert(campaigns)
-      .values(campaign)
+      .values({
+        name: campaign.name,
+        productDescription: campaign.productDescription,
+        marketingTone: campaign.marketingTone,
+        targetPlatforms: campaign.targetPlatforms,
+        budget: campaign.budget,
+        goals: campaign.goals,
+        status: campaign.status || 'active',
+        userId: campaign.userId,
+        contentFrequency: campaign.contentFrequency,
+        description: campaign.description,
+        strategy: campaign.strategy
+      })
       .returning();
     return newCampaign;
   }
 
-  async updateCampaign(id: number, campaign: Partial<InsertCampaign>, userId: string): Promise<Campaign | undefined> {
-    const [updatedCampaign] = await db
+  async updateCampaign(id: number, campaignData: Partial<InsertCampaign>, userId: string): Promise<Campaign | undefined> {
+    const updateData: any = {
+      ...campaignData,
+      updatedAt: new Date(),
+    };
+    
+    const [campaign] = await db
       .update(campaigns)
-      .set({ ...campaign, updatedAt: new Date() })
+      .set(updateData)
       .where(and(eq(campaigns.id, id), eq(campaigns.userId, userId)))
       .returning();
-    return updatedCampaign;
+    return campaign;
   }
 
   async deleteCampaign(id: number, userId: string): Promise<boolean> {
     const result = await db
       .delete(campaigns)
       .where(and(eq(campaigns.id, id), eq(campaigns.userId, userId)));
-    return (result.rowCount || 0) > 0;
+    return result.count > 0;
   }
 
   // Content operations
@@ -143,7 +160,17 @@ export class DatabaseStorage implements IStorage {
   async createContent(contentData: InsertContent): Promise<Content> {
     const [newContent] = await db
       .insert(content)
-      .values(contentData)
+      .values({
+        type: contentData.type,
+        body: contentData.body,
+        platform: contentData.platform,
+        campaignId: contentData.campaignId,
+        title: contentData.title,
+        metadata: contentData.metadata,
+        status: contentData.status,
+        scheduledAt: contentData.scheduledAt,
+        publishedAt: contentData.publishedAt
+      })
       .returning();
     return newContent;
   }
@@ -173,18 +200,26 @@ export class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(leads.createdAt));
   }
 
-  async createLead(lead: InsertLead): Promise<Lead> {
+  async createLead(leadData: InsertLead): Promise<Lead> {
     const [newLead] = await db
       .insert(leads)
-      .values(lead)
+      .values({
+        source: leadData.source,
+        email: leadData.email,
+        metadata: leadData.metadata,
+        firstName: leadData.firstName,
+        lastName: leadData.lastName,
+        status: leadData.status,
+        campaignId: leadData.campaignId
+      })
       .returning();
     return newLead;
   }
 
-  async updateLead(id: number, lead: Partial<InsertLead>): Promise<Lead | undefined> {
+  async updateLead(id: number, leadData: Partial<InsertLead>): Promise<Lead | undefined> {
     const [updatedLead] = await db
       .update(leads)
-      .set(lead)
+      .set(leadData)
       .where(eq(leads.id, id))
       .returning();
     return updatedLead;
@@ -200,21 +235,30 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async createActivity(activity: InsertActivity): Promise<Activity> {
+  async createActivity(activityData: InsertActivity): Promise<Activity> {
     const [newActivity] = await db
       .insert(activities)
-      .values(activity)
+      .values({
+        type: activityData.type,
+        userId: activityData.userId,
+        description: activityData.description,
+        metadata: activityData.metadata,
+        platform: activityData.platform,
+        campaignId: activityData.campaignId
+      })
       .returning();
     return newActivity;
   }
 
   // Metrics operations
   async getMetrics(campaignId: number, platform?: string): Promise<Metric[]> {
-    const query = db.select().from(metrics).where(eq(metrics.campaignId, campaignId));
+    let query = db.select().from(metrics).where(eq(metrics.campaignId, campaignId));
+    
     if (platform) {
-      return await query.where(and(eq(metrics.campaignId, campaignId), eq(metrics.platform, platform)));
+      query = query.where(and(eq(metrics.campaignId, campaignId), eq(metrics.platform, platform)));
     }
-    return await query;
+    
+    return await query.orderBy(desc(metrics.createdAt));
   }
 
   async createMetric(metric: Omit<Metric, 'id' | 'createdAt'>): Promise<Metric> {
@@ -233,10 +277,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(landingPages.campaignId, campaignId));
   }
 
-  async createLandingPage(landingPage: InsertLandingPage): Promise<LandingPage> {
+  async createLandingPage(landingPageData: InsertLandingPage): Promise<LandingPage> {
     const [newLandingPage] = await db
       .insert(landingPages)
-      .values(landingPage)
+      .values({
+        name: landingPageData.name,
+        title: landingPageData.title,
+        content: landingPageData.content,
+        slug: landingPageData.slug,
+        campaignId: landingPageData.campaignId,
+        ctaText: landingPageData.ctaText,
+        formFields: landingPageData.formFields,
+        subtitle: landingPageData.subtitle,
+        description: landingPageData.description,
+        isActive: landingPageData.isActive
+      })
       .returning();
     return newLandingPage;
   }
@@ -256,46 +311,29 @@ export class DatabaseStorage implements IStorage {
     contentPosts: number;
     engagementRate: number;
   }> {
-    // Get user's campaigns
-    const userCampaigns = await db
-      .select({ id: campaigns.id })
-      .from(campaigns)
-      .where(eq(campaigns.userId, userId));
-
+    const userCampaigns = await this.getCampaigns(userId);
+    const activeCampaigns = userCampaigns.filter(c => c.status === 'active').length;
+    
+    // Get total leads for user campaigns
     const campaignIds = userCampaigns.map(c => c.id);
-
-    if (campaignIds.length === 0) {
-      return {
-        activeCampaigns: 0,
-        totalLeads: 0,
-        contentPosts: 0,
-        engagementRate: 0,
-      };
+    let totalLeads = 0;
+    let contentPosts = 0;
+    
+    for (const campaignId of campaignIds) {
+      const campaignLeads = await this.getLeads(campaignId);
+      const campaignContent = await this.getContent(campaignId);
+      totalLeads += campaignLeads.length;
+      contentPosts += campaignContent.length;
     }
 
-    // Count active campaigns
-    const activeCampaignsResult = await db
-      .select({ count: campaigns.id })
-      .from(campaigns)
-      .where(and(eq(campaigns.userId, userId), eq(campaigns.status, "active")));
-
-    // Count total leads for user's campaigns
-    const totalLeadsResult = await db
-      .select({ count: leads.id })
-      .from(leads)
-      .where(eq(leads.campaignId, campaignIds[0])); // Simplified for now
-
-    // Count content posts
-    const contentPostsResult = await db
-      .select({ count: content.id })
-      .from(content)
-      .where(eq(content.campaignId, campaignIds[0])); // Simplified for now
-
+    // Calculate engagement rate (simplified)
+    const engagementRate = Math.random() * 15 + 5; // Mock for now
+    
     return {
-      activeCampaigns: activeCampaignsResult.length,
-      totalLeads: totalLeadsResult.length,
-      contentPosts: contentPostsResult.length,
-      engagementRate: 75, // Mock engagement rate
+      activeCampaigns,
+      totalLeads,
+      contentPosts,
+      engagementRate: Number(engagementRate.toFixed(1)),
     };
   }
 }
