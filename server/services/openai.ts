@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
+  apiKey: process.env.OPENAI_API_KEY || "sk-fake-key-for-development" 
 });
 
 export interface MarketingStrategy {
@@ -29,6 +29,45 @@ export class OpenAIService {
     marketingTone: string,
     targetPlatforms: string[]
   ): Promise<MarketingStrategy> {
+    // Return a mock strategy when no API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      return {
+        targetAudience: `Target audience for ${productDescription}: Tech-savvy professionals and early adopters aged 25-45 who value innovation and efficiency. They are likely decision-makers in their organizations with disposable income for quality solutions.`,
+        valueProposition: `Revolutionary solution that transforms how users approach their daily challenges, offering unparalleled efficiency and results.`,
+        keyMessages: [
+          "Innovative technology that saves time and increases productivity",
+          "Trusted by industry leaders and innovative companies",
+          "Easy to use with immediate results",
+          "Backed by data-driven insights and proven methodology",
+          "Join thousands of satisfied customers transforming their workflows"
+        ],
+        kpis: [
+          "Monthly Active Users (MAU)",
+          "Customer Acquisition Cost (CAC)",
+          "Customer Lifetime Value (CLV)",
+          "Conversion Rate",
+          "Engagement Rate",
+          "Net Promoter Score (NPS)"
+        ],
+        contentThemes: [
+          "Success stories and case studies",
+          "Industry insights and trends",
+          "How-to guides and tutorials",
+          "Behind-the-scenes content",
+          "User-generated content",
+          "Product updates and features",
+          "Thought leadership articles"
+        ],
+        competitorInsights: [
+          "Market is becoming increasingly competitive with new entrants",
+          "Users value simplicity and ease of use over complex features",
+          "Price sensitivity varies by market segment",
+          "Brand trust and reputation are key differentiators",
+          "Mobile-first approach is essential for market penetration"
+        ]
+      };
+    }
+
     try {
       const prompt = `Generate a comprehensive marketing strategy for the following product/service. Return the response as JSON in the exact format specified.
 
@@ -79,6 +118,37 @@ Ensure the strategy is tailored to the specified marketing tone and optimized fo
     contentType: string,
     marketingTone: string
   ): Promise<ContentVariation[]> {
+    // Return mock content when no API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      const mockContent: ContentVariation[] = [
+        {
+          platform,
+          type: contentType,
+          title: contentType === "article" ? `How ${productDescription} Is Changing the Game` : undefined,
+          body: `🚀 Excited to share insights about ${productDescription}! This innovative solution is transforming how we approach daily challenges. The results speak for themselves - increased efficiency, better outcomes, and satisfied users everywhere. What's been your experience with similar solutions? #innovation #productivity`,
+          hashtags: ["#innovation", "#productivity", "#technology", "#business"],
+          cta: "Learn more about our solution"
+        },
+        {
+          platform,
+          type: contentType,
+          title: contentType === "article" ? `The Future of ${productDescription}: Key Trends` : undefined,
+          body: `Looking at the latest trends in ${productDescription}, it's clear that user-centric design and seamless integration are becoming the standard. Companies that prioritize these elements are seeing remarkable growth and customer satisfaction. Where do you see this space heading next?`,
+          hashtags: ["#trends", "#future", "#userexperience", "#growth"],
+          cta: "Join the conversation"
+        },
+        {
+          platform,
+          type: contentType,
+          title: contentType === "article" ? `Why ${productDescription} Matters Now More Than Ever` : undefined,
+          body: `In today's fast-paced world, ${productDescription} has become essential for staying competitive. The data shows clear benefits: improved efficiency, cost savings, and better outcomes. Ready to take the next step? Let's discuss how this can work for your specific needs.`,
+          hashtags: ["#efficiency", "#competitive", "#results", "#success"],
+          cta: "Get started today"
+        }
+      ];
+      return mockContent;
+    }
+
     try {
       const prompt = `Generate 3 variations of ${contentType} content for ${platform} based on the marketing strategy provided. Return as JSON array.
 
