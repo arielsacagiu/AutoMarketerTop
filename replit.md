@@ -95,11 +95,47 @@ AutoMarketer is an autonomous marketing system that generates and distributes co
 - `SESSION_SECRET`: Express session encryption secret
 - `REPL_ID`: Replit environment identifier
 
+## Autonomous Engine Architecture
+
+### Sophisticated Timing and Feedback System
+AutoMarketer implements a sophisticated autonomous marketing engine based on platform-specific timing sequences and multi-sweep feedback cycles to prevent premature optimization and maximize engagement.
+
+#### Campaign Lifecycle Phases
+1. **Initialization (Immediate)**: Campaign created with UUID and tracking setup
+2. **Strategy Generation (<1 minute)**: AI generates audience map, UVP, channel selection, KPIs
+3. **Content Generation (1-3 minutes)**: Multi-format content creation with A/B variants
+4. **Validation (0-10 minutes)**: Optional compliance and brand review
+5. **Distribution (0-90 minutes)**: Staggered, randomized content publishing
+6. **Feedback Collection**: Platform-specific cooldown and multi-sweep cycles
+7. **Learning Loop**: AI optimization every 24h or on critical events
+8. **Continuous Operation**: Autonomous content creation and optimization
+
+#### Platform-Specific Feedback Windows
+- **Social Platforms**: 45min cooldown → 2h, 2h, 2h, 24h, daily sweeps
+- **Blog Platforms**: 2h cooldown → 6h, 24h, daily sweeps  
+- **Forum Platforms**: 1h cooldown → 6h, 24h, daily sweeps
+- **Email Campaigns**: 2h cooldown → 12h, 24h, daily sweeps
+
+#### Key Principles
+- No premature optimization before sufficient signal maturity
+- Content mutations only after platform-specific data collection
+- Autonomous adaptation based on quantitative feedback, not random chance
+- Closed-loop AI improvement with backtracking and memory retention
+
+### Technical Implementation
+- **AutonomousMarketingEngine**: Core engine with state management and timing logic
+- **Multi-sweep feedback collection**: Platform-specific timing patterns
+- **Learning bank**: AI memory system for optimization patterns
+- **Emergency stop capability**: Manual intervention controls
+- **Real-time monitoring**: Dashboard with engine status and performance metrics
+
 ## Changelog
 
 ```
 Changelog:
-- June 30, 2025. Initial setup
+- June 30, 2025. Initial setup with autonomous engine implementation
+- June 30, 2025. Implemented sophisticated timing sequences and feedback logic
+- June 30, 2025. Added autonomous engine monitoring dashboard
 ```
 
 ## User Preferences

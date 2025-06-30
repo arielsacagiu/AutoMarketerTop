@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Create Campaign", href: "/campaigns/new", icon: Plus },
+  { name: "Campaigns", href: "/campaigns", icon: Plus },
   { name: "Content Calendar", href: "/content-calendar", icon: Calendar },
+  { name: "Autonomous Engine", href: "/autonomous-engine", icon: Bot },
   { name: "Leads & Contacts", href: "/leads", icon: Users },
   { name: "Automation", href: "/automation", icon: Settings },
   { name: "AI Insights", href: "/insights", icon: Brain },
